@@ -22,7 +22,6 @@ plot(mod_aug)
 mod_fix_t <- bassfunc2bass_fixed_t(mod_t, func.use=c(0.5, 0.75))
 plot(mod_fix_t[[1]])
 
-
 # Fit pca model
 modPCA_t <- bassPCA(x, y)
 

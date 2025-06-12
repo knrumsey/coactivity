@@ -9,9 +9,11 @@ v3](https://img.shields.io/badge/License-BSD_3-blue.svg)](https://www.gnu.org/li
 
 <div class="figure">
 
-<img src="inst/logos/Coactivity.png" alt="This logo was designed by Imagine AI Art Studio" width="50%" />
+<img src="inst/logos/Coactivity.png" alt="&lt;span style='font-size:50%;'&gt;This logo was designed by Imagine AI Art Studio.&lt;/span&gt;" width="50%" />
 <p class="caption">
-This logo was designed by Imagine AI Art Studio
+
+<span style="font-size:50%;">This logo was designed by Imagine AI Art
+Studio.</span>
 </p>
 
 </div>
@@ -23,13 +25,14 @@ the [discovery of active subspaces in
 high-dimensions](https://arxiv.org/pdf/2307.11241.pdf) (described in K.
 Rumsey, Francom, and Vander Wiel (2024)). The “workhorse” of the package
 is the `C_bass()` function, which estimates *Constantine’s* $C$ matrix
-(see Constantine (2015))for a given computer model and behaves similarly
-to the `activegp::C_gp()` function (described in Wycoff, Binois, and
-Wild (2021)). The `C_bass()` function, which relies on a Bayesian MARS
-emulator (as described in Francom and Sansó (2020) and implemented in
-the [BASS package](https://CRAN.R-project.org/package=BASS)) is likely
-to be more efficient and accurate when the dimension of the input space
-is large and admits a large class of *measures* for the inputs.
+(see Constantine (2015)) for a given computer model and behaves
+similarly to the `activegp::C_gp()` function (described in Wycoff,
+Binois, and Wild (2021)). The `C_bass()` function, which relies on a
+Bayesian MARS emulator (as described in Francom and Sansó (2020) and
+implemented in the [BASS
+package](https://CRAN.R-project.org/package=BASS)) is likely to be more
+efficient and accurate when the dimension of the input space is large
+and admits a large class of *measures* for the inputs.
 
 The package can also be used to estimate *co-active subspaces*, as
 described in K. N. Rumsey et al. (2024).

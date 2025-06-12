@@ -1,15 +1,14 @@
-#' Expected gradient with BASS
+#' Expected value of a BASS model
 #'
-#' Closed form estimator of the expected value of the gradient of a function
+#' Closed form estimator of the expected value of a BASS function
 #'
 #' @param mod a fitted BASS model. The output of the bass() or bassPCA() functions.
 #' @param prior a list, like one returned by the \code{build_prior()} function. See the documentation for details.
 #' @param mcmc.use a vector of indices telling which mcmc draws to use
-#' @param use_native_scale logical (default `TRUE`). Determines the scale of the inputs for computing the \( C \)-matrix. When `TRUE`, the \( C \)-matrix is computed on the original (native) scale of the input variables. When `FALSE`, the \( C \)-matrix corresponds to the inputs normalized to the \([0, 1]\) range, as used internally by BASS. This also affects derived quantities, such as activity scores..
 #' @param func.use a vector indicating which values of the functional variable to compute C for, if applicable
 #' @param verbose Doesn't do anything currently.
 #' @return A list representing the posterior distribution of the Constantine matrix.
-#' @details Returns the expected value of the gradient of a BASS model.The \code{use_native_scale} flag indicates whether the C matrix should be transformed to the native space before returning.
+#' @details Returns the expected value of a BASS model.
 #' @examples
 #' # FRIEDMAN FUNCTION
 #' # First input is treated as functional
@@ -24,9 +23,9 @@
 #' XX <- lhs::randomLHS(500, 5)
 #' y1 <- apply(XX, 1, f, t = 0.5)
 #' mod <- bass(XX, y1)
-#' Z <- Z_bass(mod)
+#' E <- E_bass(mod)
 #' @export
-Z_bass <- function(mod, prior=NULL, mcmc.use=NULL, use_native_scale=FALSE, func.use=NULL, verbose=FALSE){
+E_bass <- function(mod, prior=NULL, mcmc.use=NULL, func.use=NULL, verbose=FALSE){
   if("bass" %in% class(mod)){
     if(mod$func){
       if(is.null(func.use)){
@@ -37,14 +36,14 @@ Z_bass <- function(mod, prior=NULL, mcmc.use=NULL, use_native_scale=FALSE, func.
       if(length(func.use) > 1){
         res <- list()
         for(i in seq_along(func.use)){
-          res[[i]] <- Z_bass_univariate(mod_t[[i]], prior, mcmc.use, use_native_scale)
+          res[[i]] <- E_bass_univariate(mod_t[[i]], prior, mcmc.use)
         }
       }else{
-        res <- Z_bass_univariate(mod_t, prior, mcmc.use, use_native_scale)
+        res <- E_bass_univariate(mod_t, prior, mcmc.use)
       }
       return(res)
     }else{
-      res <- Z_bass_univariate(mod, prior, mcmc.use, use_native_scale)
+      res <- E_bass_univariate(mod, prior, mcmc.use)
       return(res)
     }
   }else if("bassBasis" %in% class(mod)){
@@ -56,12 +55,12 @@ Z_bass <- function(mod, prior=NULL, mcmc.use=NULL, use_native_scale=FALSE, func.
     if(length(func.use) > 1){
       res <- list()
       for(i in seq_along(func.use)){
-        res[[i]] <- Z_bass_univariate(mod_t[[i]], prior, mcmc.use, use_native_scale)
+        res[[i]] <- E_bass_univariate(mod_t[[i]], prior, mcmc.use)
       }
     }else{
-      res <- Z_bass_univariate(mod_t, prior, mcmc.use, use_native_scale)
+      res <- E_bass_univariate(mod_t, prior, mcmc.use)
     }
-      return(res)
+    return(res)
   }else{
     return("mod should be a fitted bass model")
   }
@@ -70,7 +69,7 @@ Z_bass <- function(mod, prior=NULL, mcmc.use=NULL, use_native_scale=FALSE, func.
 
 
 
-Z_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL, use_native_scale=FALSE){
+E_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL){
   if(is.null(mcmc.use)){
     mcmc.use <- length(mod$nbasis)
   }
@@ -143,7 +142,7 @@ Z_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL, use_native_scale
   }
 
   # Make Z vector
-  Zf_post <- list()
+  Ef_post <- list()
   # Get transformation vector
   A_tform <- 1/apply(mod$range.des, 2, diff)
   for(r in 1:length(mcmc.use)){
@@ -151,6 +150,7 @@ Z_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL, use_native_scale
     rr <- mcmc.use[r]
     mod_number_new <- mod$model.lookup[rr]
     coeff      <- mod$beta[rr,]
+    intercept  <- coeff[1]
     coeff      <- matrix(coeff[!is.na(coeff)][-1], nrow=1)
     M_new <- length(coeff)
 
@@ -176,7 +176,7 @@ Z_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL, use_native_scale
       }
 
       # Initalize arrays
-      A <- B <- I4 <- I5 <- array(NA, dim=c(mod$pdes, M))
+      A <- B <- I5 <- Eim <- array(NA, dim=c(mod$pdes, M))
       for(i in 1:mod$pdes){
         prior_i <- prior[[i]]
 
@@ -202,7 +202,7 @@ Z_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL, use_native_scale
         s[is.na(s)] <- 1
         t[is.na(t)] <- -Inf
 
-        a <- b <- i4 <- i5 <- matrix(0, M)
+        a <- b <- i5 <- matrix(0, M)
         #browser()
         for(m in 1:M){
           um <- u[m]
@@ -221,35 +221,25 @@ Z_bass_univariate <- function(mod, prior = NULL, mcmc.use=NULL, use_native_scale
             browser()
           }
           # Compute integrals
-          i4[m] <- ssm*um*E0
           i5[m] <- ifelse(um == 0, 1, ssm*(E1 - tm*E0))
         }
 
         A[i,]  <- a
         B[i,]  <- b
-        I4[i,] <- i4
         I5[i,] <- i5
       }
     }
-    #browser()
     #Reconstruct Constantine matrix
-    Zf <- matrix(NA, nrow=mod$pdes)
-    for(i in 1:mod$pdes){
-      zi_curr <- coeff*I4[i,]
-      for(k in (1:mod$pdes)[-i]){
-        zi_curr <- zi_curr * I5[k,]
-      }
-      Zf[i] <- sum(zi_curr)
+    zi_curr <- coeff
+    for(k in 1:mod$pdes){
+      zi_curr <- zi_curr * I5[k,]
     }
-    if(use_native_scale == FALSE){
-      # Transform back to native space
-      Zf <- A_tform * Zf
-    }
-    Zf_post[[r]] <- Zf
+    Ef <- sum(zi_curr) + intercept
+
+    Ef_post[[r]] <- Ef
   }
-  class(Zf_post) <- "ConstantineVector"
-  if(length(Zf_post) == 1){
-    return(Zf_post[[1]])
+  if(length(Ef_post) == 1){
+    return(Ef_post[[1]])
   }
-  return(Zf_post)
+  return(Ef_post)
 }

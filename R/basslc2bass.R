@@ -160,6 +160,7 @@ basslc2bass <- function(mod_list, weights=rep(1, length(mod_list)), offset=0, yy
       ## Simplify model, in the case of any duplicates.
       model_cand <- cbind(knots_cand, signs_cand, vars_cand)
       duplicates <- find_duplicate_groups(model_cand)
+      to_remove_final <- NULL
       for(jj in seq_along(duplicates)){
         dup_jj <- duplicates[[jj]]
 
@@ -168,12 +169,16 @@ basslc2bass <- function(mod_list, weights=rep(1, length(mod_list)), offset=0, yy
 
         # Remove the excess rows
         to_remove <- dup_jj[-1]
-        n.int_cand <- n.int_cand[-to_remove]
-        knots_cand <- knots_cand[-to_remove,]
-        signs_cand <- signs_cand[-to_remove,]
-        vars_cand <- vars_cand[-to_remove,]
-        beta_cand <- beta_cand[-to_remove]
+        to_remove_final <- c(to_remove_final, to_remove)
       }
+      if(!is.null(to_remove_final)){
+        n.int_cand <- n.int_cand[-to_remove_final]
+        knots_cand <- knots_cand[-to_remove_final,]
+        signs_cand <- signs_cand[-to_remove_final,]
+        vars_cand <- vars_cand[-to_remove_final,]
+        beta_cand <- beta_cand[-to_remove_final]
+      }
+
 
       # Check to see if this new model is already in the full model
       modelFull <- abind_custom(knots, signs, vars, along=3)
@@ -183,11 +188,12 @@ basslc2bass <- function(mod_list, weights=rep(1, length(mod_list)), offset=0, yy
       nbasis_curr   <- length(n.int_cand)
       beta[mm,1:(nbasis_curr+1)] <- c(beta0_cand, beta_cand)
 
-
       if(is_duplicate_model){
-        # If duplicate, just set lookup and nbasis to previous values
-        lookupFull[mm] <- lookupFull[mm-1]
-        nbasisFull[mm] <- nbasisFull[mm-1]
+        # If duplicate, just set lookup and nbasis to duplicate value
+        mm_star <- which(apply(modelFull, 1,
+                               function(slice) identical(slice, model_cand)))[1]
+        lookupFull[mm] <- mm_star
+        nbasisFull[mm] <- nbasisFull[mm_star]
       }else{
         # If not duplicate, add everything to the full model
         nbasis_curr   <- length(n.int_cand)
@@ -226,13 +232,17 @@ basslc2bass <- function(mod_list, weights=rep(1, length(mod_list)), offset=0, yy
       # Remove duplicates and combine betas
       # NOTE: duplicates will be the same as it was last iteration,
       #       so no need to recompute it
+      to_remove_final <- NULL
       for(jj in seq_along(duplicates)){
         dup_jj <- duplicates[[jj]]
         # Add the coefficients together
         beta_cand[dup_jj[1]] <- sum(beta_cand[dup_jj])
         # Remove the excess rows
         to_remove <- dup_jj[-1]
-        beta_cand <- beta_cand[-to_remove]
+        to_remove_final <- c(to_remove_final, to_remove)
+      }
+      if(!is.null(to_remove_final)){
+        beta_cand <- beta_cand[-to_remove_final]
       }
       beta[mm,1:(nbasis_curr+1)] <- c(beta0_cand, beta_cand)
     }
@@ -335,8 +345,4 @@ abind_custom <- function(..., along){
   }
   return(result)
 }
-
-
-
-
 

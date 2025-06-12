@@ -15,7 +15,6 @@ XX <- lhs::randomLHS(500, 5)
 y1 <- apply(XX, 1, f, t=0.5)
 y2 <- apply(XX, 1, g, t=0.5)
 
-
 xfunc <- seq(0, 1, length.out=20)
 yfunc1 <- t(apply(XX, 1, f, t=xfunc))
 yfunc2 <- t(apply(XX, 1, g, t=xfunc))
@@ -56,6 +55,15 @@ for(i in 1:6){
   image(get(paste0("Cfg",i)))
 }
 par(mfrow=c(1,1))
+
+# Check that all approaches gives the same eigenvalues
+for(i in 1:6){
+  if(i == 1){
+    plot(eigen(get(paste0("Cfg",i)))$vectors[,1])
+  }else{
+    points(eigen(get(paste0("Cfg",i)))$vectors[,1], pch=i)
+  }
+}
 
 # Alternatively
 #C2b <- C_bass(mod2_full, func.use = 0.5)

@@ -430,6 +430,7 @@ Cfg_aug_bass_univariate <- function(mod1, mod2, prior=NULL, mcmc.use=NULL, verbo
         }
       }
 
+      #browser()
       # Get Lamba Vectors
       Lambda_fg <- Lambda_gf <- rep(NA, mod$pdes)
       for(j in 1:mod$pdes){
@@ -497,6 +498,7 @@ compute_derivative <- function(u, t) {
 
   return(u_deriv)
 }
+
 
 # Function to compute integrals using the trapezoidal rule
 trapezoidal <- function(t, f) {

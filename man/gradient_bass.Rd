@@ -19,9 +19,6 @@ gradient_bass(object, newdata, mcmc.use = NULL, verbose = FALSE)
 An array of gradient evaluations. First dimension indexes MCMC iteration, second dimension indexes input location, third dimension indexes the input variable.
 }
 \description{
-I THINK THIS IS WRONG AT THE MOMENT.
-}
-\details{
 This function behaves similarly to the predict.bass method, except that it returns
 predictions for the gradient of f.
 }

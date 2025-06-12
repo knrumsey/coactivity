@@ -20,14 +20,14 @@ knitr::opts_chunk$set(
 library(BASS)
 ```
 
-```{r, eval=TRUE, echo=FALSE, fig.cap="This logo was designed by Imagine AI Art Studio", out.width='50%'}
+```{r, eval=TRUE, echo=FALSE, fig.cap="<span style='font-size:50%;'>This logo was designed by Imagine AI Art Studio.</span>", out.width='50%'}
 knitr::include_graphics("inst/logos/Coactivity.png")
 ```
 
 
 ### Description 
 
-`coactivity` is an R package for performing concordance analyses and for the [discovery of active subspaces in high-dimensions](https://arxiv.org/pdf/2307.11241.pdf) (described in @rumsey2024discovering). The "workhorse" of the package is the `C_bass()` function, which estimates *Constantine's* $C$ matrix (see @constantine2015active)for a given computer model and behaves similarly to the `activegp::C_gp()` function (described in @wycoff2021sequential). The `C_bass()` function, which relies on a Bayesian MARS emulator (as described in @francom2020bass and implemented in the [BASS package](https://CRAN.R-project.org/package=BASS)) is likely to be more efficient and accurate when the dimension of the input space is large and admits a large class of *measures* for the inputs. 
+`coactivity` is an R package for performing concordance analyses and for the [discovery of active subspaces in high-dimensions](https://arxiv.org/pdf/2307.11241.pdf) (described in @rumsey2024discovering). The "workhorse" of the package is the `C_bass()` function, which estimates *Constantine's* $C$ matrix (see @constantine2015active) for a given computer model and behaves similarly to the `activegp::C_gp()` function (described in @wycoff2021sequential). The `C_bass()` function, which relies on a Bayesian MARS emulator (as described in @francom2020bass and implemented in the [BASS package](https://CRAN.R-project.org/package=BASS)) is likely to be more efficient and accurate when the dimension of the input space is large and admits a large class of *measures* for the inputs. 
 
 The package can also be used to estimate *co-active subspaces*, as described in @rumsey2024co. 
 

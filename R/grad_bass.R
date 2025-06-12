@@ -1,7 +1,5 @@
 #' Gradient evaluations of a BASS model
 #'
-#' I THINK THIS IS WRONG AT THE MOMENT.
-#'
 #' This function behaves similarly to the predict.bass method, except that it returns
 #' predictions for the gradient of f.
 #'
