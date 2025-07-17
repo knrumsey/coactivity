@@ -571,6 +571,7 @@ Cfg_bass_univariate_mc <- function(mod1, mod2, prior = NULL, mcmc.use=NULL, use_
     for(j in seq_len(n_mc)){
       C_tmp <- C_tmp + tcrossprod(grads1[i,j,], grads2[i,j,]) / n_mc
     }
+
     if(use_native_scale){
       # Transform back to native space
       C_tmp <- t(A_tform)%*%C_tmp%*%A_tform
