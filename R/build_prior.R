@@ -67,7 +67,7 @@ build_prior <- function(dist, lower=-Inf, upper=Inf,
     } else if (is.vector(arg) && length(arg) == ncol) {
       matrix(arg, nrow = nrow, ncol = ncol, byrow = FALSE)
     } else {
-      arg
+      matrix(arg, nrow=nrow, ncol=ncol)
     }
   }
 
@@ -89,7 +89,6 @@ build_prior <- function(dist, lower=-Inf, upper=Inf,
     distribution <- dist[i, , drop = FALSE]
     pr <- list(dist = distribution,
                trunc = c(lower[i], upper[i]))
-
     if (!is.null(mu)) {
       pr$mu <- mu[i, , drop = FALSE]
     }
@@ -119,4 +118,78 @@ build_prior <- function(dist, lower=-Inf, upper=Inf,
   }
 
   return(prior)
+}
+
+
+
+mu_mix <- matrix(c(0.4, 0.5,
+                   0.3, 0.5,
+                   0.2, 0.9), ncol=2, byrow=TRUE)
+sd_mix <- matrix(c(0.1, 0.1,
+                   0.1, 0.15,
+                   0.05, 0.2), ncol=2, byrow=TRUE)
+wt_mix <- matrix(c(0.5, 0.5,
+                   0.8, 0.2,
+                   1.0, 0.0), ncol=2, byrow=TRUE)
+foo = build_prior(matrix("norm", nrow=3, ncol=2), lower=0, upper=1, mu=mu_mix, sigma=sd_mix, weights=wt_mix)
+
+
+get_prior_generator <- function(obj) {
+
+  # Helper function to sample from one component (with rejection)
+  sample_within_bounds <- function(dist_name, params, trunc) {
+    lower <- trunc[1]
+    upper <- trunc[2]
+
+    repeat {
+      # Single component draw
+      val <- switch(dist_name,
+                    "uniform" = runif(1, min = params$lower, max = params$upper),
+                    "normal" = rnorm(1, mean = params$mu, sd = params$sigma),
+                    "beta"   = rbeta(1, shape1 = params$shape1, shape2 = params$shape2),
+                    "gamma"  = rgamma(1, shape = params$shape, scale = params$scale),
+                    stop(paste("Unsupported distribution:", dist_name))
+      )
+      if (val >= lower && val <= upper) return(val)
+    }
+  }
+
+  # The returned sampler function
+  rprior <- function() {
+    p <- length(obj)
+    x <- numeric(p)
+
+    for (i in seq_len(p)) {
+      prior_i <- obj[[i]]
+      dists <- prior_i$dist
+      weights <- prior_i$weights
+      trunc <- prior_i$trunc
+      k <- length(dists)
+
+      # Normalize weights in case they're not
+      weights <- weights / sum(weights)
+
+      # Sample component index
+      comp <- if (k == 1) 1 else sample(seq_len(k), size = 1, prob = weights)
+      dist_name <- dists[comp]
+
+      # Gather parameters (default to NA if missing)
+      params <- list(
+        lower = if (!is.null(prior_i$lower)) prior_i$lower else trunc[1],
+        upper = if (!is.null(prior_i$upper)) prior_i$upper else trunc[2],
+        mu = if (!is.null(prior_i$mu)) prior_i$mu[1, comp] else NA,
+        sigma = if (!is.null(prior_i$sigma)) prior_i$sigma[1, comp] else NA,
+        shape1 = if (!is.null(prior_i$shape1)) prior_i$shape1[1, comp] else NA,
+        shape2 = if (!is.null(prior_i$shape2)) prior_i$shape2[1, comp] else NA,
+        shape = if (!is.null(prior_i$shape)) prior_i$shape[1, comp] else NA,
+        scale = if (!is.null(prior_i$scale)) prior_i$scale[1, comp] else NA
+      )
+
+      x[i] <- sample_within_bounds(dist_name, params, trunc)
+    }
+
+    return(x)
+  }
+
+  return(rprior)
 }

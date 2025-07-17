@@ -63,6 +63,7 @@ gradient_bass <- function(object, newdata, mcmc.use=NULL, verbose=FALSE){
         for(i in 1:n){
           # Compute h_jm'(x_j)
           h_prime <- beta[m] * signs[ind] * as.numeric(signs[ind] * (X[i, j] - knots[ind]) > 0)
+          #h_prime <- beta[m] * signs[ind] * as.numeric(signs[ind] / abs(signs[ind]) * (X[i, j] - knots[ind]) > 0)
 
           # Compute product of h_km(x_k) for k != j
           vars_left <- vars[-ind]
@@ -71,7 +72,11 @@ gradient_bass <- function(object, newdata, mcmc.use=NULL, verbose=FALSE){
           res_prod <- 1
           for(k in seq_along(vars_left)){
             jprime <- vars_left[k]
-            res_prod <- res_prod * as.numeric(signs_left[k] * (X[i, jprime] - knots_left[k]) > 0)
+            #res_prod <- res_prod * as.numeric(signs_left[k] * (X[i, jprime] - knots_left[k]) > 0)
+            # --- begin patch --------------------------------------------
+            hinge_val <- signs_left[k] * (X[i, jprime] - knots_left[k])
+            res_prod  <- res_prod * pmax(hinge_val, 0)  # <-- keep full hinge
+            # --- end patch ----------------------------------------------
           }
           curr[i] <- h_prime * res_prod
         }

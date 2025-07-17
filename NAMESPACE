@@ -2,8 +2,10 @@
 
 export(C_aug_bass)
 export(C_bass)
+export(C_bass_mc)
 export(Cfg_aug_bass)
 export(Cfg_bass)
+export(Cfg_bass_mc)
 export(E_bass)
 export(K_bass)
 export(Kfg_bass)

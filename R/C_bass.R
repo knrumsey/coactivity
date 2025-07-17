@@ -107,6 +107,7 @@ get_u <- function(t, U, k){
 }
 
 C_bass_pca_v1 <- function(mod, prior, mcmc.use, func.use, func.true, use_native_scale, verbose){
+  warning("Not currently supported. Use pca_method=2")
   return(TRUE)
 }
 
