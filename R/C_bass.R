@@ -490,7 +490,7 @@ XI_FUNC_TNORM <- function(pow, a, b, prior, ell){
 }
 
 
-XI_FUNC_TNORM_SVW <- function(pow, a, b, prior){
+XI_FUNC_TNORM_SVW <- function(pow, a, b, prior, ell){
   mu    <- prior$mean[ell]
   sigma <- prior$sd[ell]
   tau0  <- prior$trunc[1]
