@@ -75,6 +75,7 @@ gradient_bass <- function(object, newdata, mcmc.use=NULL, smoothing_width=0, ver
             jprime <- vars_left[k]
             #res_prod <- res_prod * as.numeric(signs_left[k] * (X[i, jprime] - knots_left[k]) > 0)
             #hinge_val <- signs_left[k] * (X[i, jprime] - knots_left[k])
+            #hing_val <- pmax(hinge_val, 0)
             hinge_val <- softplus(signs_left[k] * (X[i, jprime] - knots_left[k]))
             res_prod  <- res_prod * hinge_val
           }
@@ -105,10 +106,5 @@ d_softplus <- function(z, tau = 0) {
 }
 
 
-par(mfrow=c(2,2))
-eps_vec <- cor_vec <- c(0, 0.0001, 0.01, 0.1)
-for(i in seq_along(eps_vec)){
-  grads = apply(gradient_bass(object, X, mcmc.use=c(100, 200, 300, 400, 500, 600, 1000), smoothing_width=eps_vec[i]), c(2,3), mean)
-  plot(X[,1], grads[,2], main=paste0("eps = ", eps_vec[i]))
-}
+
 
