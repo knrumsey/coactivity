@@ -4,7 +4,13 @@
 \alias{gradient_bass}
 \title{Gradient evaluations of a BASS model}
 \usage{
-gradient_bass(object, newdata, mcmc.use = NULL, verbose = FALSE)
+gradient_bass(
+  object,
+  newdata,
+  mcmc.use = NULL,
+  smoothing_width = 0,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{object}{A fitted model, output from the bass function}
@@ -12,6 +18,8 @@ gradient_bass(object, newdata, mcmc.use = NULL, verbose = FALSE)
 \item{newdata}{A matrix of input locations at which to evaluate the gradient. The columns should correspond to the same variables used in the \code{bass} function.}
 
 \item{mcmc.use}{A vector indexing which MCMC iterations to be used.}
+
+\item{smoothing_width}{When positive, splines are replaced with smooth differentiable alternatives.}
 
 \item{verbose}{logical; should progress be displayed}
 }

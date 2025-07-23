@@ -6,6 +6,7 @@
 #' @param object A fitted model, output from the bass function
 #' @param newdata A matrix of input locations at which to evaluate the gradient. The columns should correspond to the same variables used in the \code{bass} function.
 #' @param mcmc.use A vector indexing which MCMC iterations to be used.
+#' @param smoothing_width When positive, splines are replaced with smooth differentiable alternatives.
 #' @param verbose logical; should progress be displayed
 #' @export
 #' @return An array of gradient evaluations. First dimension indexes MCMC iteration, second dimension indexes input location, third dimension indexes the input variable.
@@ -21,7 +22,7 @@
 #' gradients <- gradient_bass(mod, Xnew)
 #'
 #' @export
-gradient_bass <- function(object, newdata, mcmc.use=NULL, verbose=FALSE){
+gradient_bass <- function(object, newdata, mcmc.use=NULL, smoothing_width=0, verbose=FALSE){
   if(is.null(mcmc.use)){
     mcmc.use <- seq_along(object$nbasis)
   }
@@ -58,18 +59,12 @@ gradient_bass <- function(object, newdata, mcmc.use=NULL, verbose=FALSE){
       # Loop only over variables in vars (u_{im} = 1)
       for(j in vars){
         ind <- which(j == vars)
-
         # Compute derivative only for variable j
         curr <- rep(NA, n)
         for(i in 1:n){
           # Compute h_jm'(x_j)
-
-          if(abs(X[i, j] - knots[ind]) < 1e-4){
-            browser()
-          }
-
-          h_prime <- beta[m] * signs[ind] * as.numeric(signs[ind] * (X[i, j] - knots[ind]) > 0)
-          #h_prime <- beta[m] * signs[ind] * as.numeric(signs[ind] / abs(signs[ind]) * (X[i, j] - knots[ind]) > 0)
+          #h_prime <- beta[m] * signs[ind] * as.numeric(signs[ind] * (X[i, j] - knots[ind]) > 0)
+          h_prime <- beta[m] * signs[ind] * d_softplus(signs[ind] * (X[i, j] - knots[ind]), smoothing_width)
 
           # Compute product of h_km(x_k) for k != j
           vars_left <- vars[-ind]
@@ -79,8 +74,9 @@ gradient_bass <- function(object, newdata, mcmc.use=NULL, verbose=FALSE){
           for(k in seq_along(vars_left)){
             jprime <- vars_left[k]
             #res_prod <- res_prod * as.numeric(signs_left[k] * (X[i, jprime] - knots_left[k]) > 0)
-            hinge_val <- signs_left[k] * (X[i, jprime] - knots_left[k])
-            res_prod  <- res_prod * pmax(hinge_val, 0)  # <-- keep full hinge
+            #hinge_val <- signs_left[k] * (X[i, jprime] - knots_left[k])
+            hinge_val <- softplus(signs_left[k] * (X[i, jprime] - knots_left[k]))
+            res_prod  <- res_prod * hinge_val
           }
           curr[i] <- h_prime * res_prod
         }
@@ -90,3 +86,29 @@ gradient_bass <- function(object, newdata, mcmc.use=NULL, verbose=FALSE){
   }
   return(grads)
 }
+
+
+softplus <- function(z, tau = 0) {
+  if (tau == 0) {
+    pmax(z, 0)
+  } else {
+    log1p(exp(z / tau)) * tau
+  }
+}
+
+d_softplus <- function(z, tau = 0) {
+  if (tau == 0) {
+    as.numeric(z > 0)
+  } else {
+    1 / (1 + exp(-z / tau))
+  }
+}
+
+
+par(mfrow=c(2,2))
+eps_vec <- cor_vec <- c(0, 0.0001, 0.01, 0.1)
+for(i in seq_along(eps_vec)){
+  grads = apply(gradient_bass(object, X, mcmc.use=c(100, 200, 300, 400, 500, 600, 1000), smoothing_width=eps_vec[i]), c(2,3), mean)
+  plot(X[,1], grads[,2], main=paste0("eps = ", eps_vec[i]))
+}
+
