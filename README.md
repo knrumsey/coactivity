@@ -72,11 +72,14 @@ y <- apply(X, 1, f, t = 0.5)
 mod <- BASS::bass(X, y)
 
 # Estimate C matrix
-C <- coactivity::C_bass(X, y)
+C <- coactivity::C_bass(mod, mcmc.use=seq(1000, 10000, by=1000))
+
+# Combine (or alternatively, study the samples)
+C_post_mean <- apply(simplify2array(C), 1:2, mean)
 
 # Get active subspace
-W <- eigen(C)$vectors
-Lambda <- eigen(C)$values
+W <- eigen(C_post_mean)$vectors
+Lambda <- eigen(C_post_mean)$values
 ```
 
 For functional response, we can do this three different ways.
