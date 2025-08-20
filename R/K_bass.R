@@ -71,8 +71,8 @@ K_bass <- function(mod, prior=NULL, prior_func=function(tt) dunif(tt),
     }
     if("bass" %in% class(mod)){
       if(mod$func){
-        nfunc <- nrow(mod$xxfunc)
-        func.use <- mod$xx.func
+        nfunc <- nrow(mod$xx.func)
+        func.use <- as.numeric(mod$xx.func)
       }
     }
   }else{
