@@ -50,8 +50,14 @@ bassfunc2bass <- function(bfm){
   )
 
   yy <- as.vector(bfm$y)
-  yyhat.mean <- as.vector(bfm$yhat.mean)
-  yyhat <- t(apply(bfm$yhat, 1, function(mat) as.vector(mat)))
+  if(!is.null(bfm$yhat)){
+    yyhat.mean <- as.vector(bfm$yhat.mean)
+    yyhat <- t(apply(bfm$yhat, 1, function(mat) as.vector(mat)))
+  }else{
+    yyhat <- NULL
+    yyhat.mean <- NULL
+  }
+
 
   # Get information about bass
   nm <- bfm$n.models

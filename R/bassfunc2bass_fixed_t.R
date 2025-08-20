@@ -268,29 +268,31 @@ bassfunc2bass_fixed_t <- function(bassfunc, func.use, verbose=FALSE) {
     # Update y, yhat, and yhat.mean
     if(bassfunc$pfunc == 1){
       mod$y_full <- mod$y
-      mod$yhat_full <- mod$yhat
-      mod$yhat.mean_full <- mod$yhat.mean
-
       y_new <- sapply(seq_len(nrow(mod$y)), function(ii) approx(mod$xx.func, mod$y[ii,], t_val))
       y_new <- unlist(y_new[2,])
       mod$y <- y_new
 
-      yhat.mean_new <- sapply(seq_len(nrow(mod$yhat.mean)), function(ii) approx(mod$xx.func, mod$yhat.mean[ii,], t_val))
-      yhat.mean_new <- unlist(yhat.mean_new[2,])
-      mod$yhat.mean <- yhat.mean_new
+      if(!is.null(mod$yhat)){
+        mod$yhat_full <- mod$yhat
+        yhat_new <- array(NA, dim = c(dim(bassfunc$yhat)[1], dim(bassfunc$yhat)[2], length(func.use)))
+        for(m in seq_len(dim(bassfunc$yhat)[1])){  # Loop over MCMC iterations
+          yhat_new[m, , ] <- t(sapply(seq_len(dim(bassfunc$yhat)[2]), function(ii) {
+            approx(bassfunc$xx.func, bassfunc$yhat[m, ii, ], func.use, rule = 2)$y
+          }))
+        }
+        mod$yhat <- yhat_new
 
-      yhat_new <- array(NA, dim = c(dim(bassfunc$yhat)[1], dim(bassfunc$yhat)[2], length(func.use)))
-      for(m in seq_len(dim(bassfunc$yhat)[1])){  # Loop over MCMC iterations
-        yhat_new[m, , ] <- t(sapply(seq_len(dim(bassfunc$yhat)[2]), function(ii) {
-          approx(bassfunc$xx.func, bassfunc$yhat[m, ii, ], func.use, rule = 2)$y
-        }))
+        # Modify the s2 variable?
+        sd_full <- sd(bassfunc$y - bassfunc$yhat.mean)
+        sd_new  <- sd(mod$y - mod$yhat.mean)
+        mod$s2 <- mod$s2 * (sd_new/sd_full)^2
       }
-      mod$yhat <- yhat_new
-
-      # Modify the s2 variable?
-      sd_full <- sd(bassfunc$y - bassfunc$yhat.mean)
-      sd_new  <- sd(mod$y - mod$yhat.mean)
-      mod$s2 <- mod$s2 * (sd_new/sd_full)^2
+      if(!is.null(mod$yhat.mean)){
+        mod$yhat.mean_full <- mod$yhat.mean
+        yhat.mean_new <- sapply(seq_len(nrow(mod$yhat.mean)), function(ii) approx(mod$xx.func, mod$yhat.mean[ii,], t_val))
+        yhat.mean_new <- unlist(yhat.mean_new[2,])
+        mod$yhat.mean <- yhat.mean_new
+      }
     }
 
     # Append the modified model

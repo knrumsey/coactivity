@@ -61,13 +61,19 @@ basslc2bass <- function(mod_list, weights=rep(1, length(mod_list)), offset=0, yy
   des <- mod_curr$des
   type <- mod_curr$type
 
+  has_yhat <- !is.null(mod_curr$yhat)
+
   # These fields may be different for each bass model
   # or they might change over the course of the code
   nbasis   <- matrix(mod_curr$nbasis[mcmc.use], ncol=1)
   n.models <- length(unique(mod_curr$model.lookup[mcmc.use]))
   z <- matrix(weights[1] * mod_curr$y, ncol=1)
-  yhat <- offset + weights[1]*mod_curr$yhat[mcmc.use,]
-  yhat.mean <- offset + weights[1]*mod_curr$yhat.mean
+  if(has_yhat){
+    yhat <- offset + weights[1]*mod_curr$yhat[mcmc.use,]
+    yhat.mean <- offset + weights[1]*mod_curr$yhat.mean
+  }else{
+    yhat <- yhat.mean <- NULL
+  }
   lam <- matrix(mod_curr$lam[mcmc.use], ncol=1)
   s2 <- weights[1]^2*mod_curr$s2[mcmc.use]
   beta.prec <- weights[1]^(-2) * matrix(mod_curr$beta.prec[mcmc.use], ncol=1)
@@ -84,8 +90,13 @@ basslc2bass <- function(mod_list, weights=rep(1, length(mod_list)), offset=0, yy
       nbasis <- cbind(nbasis, mod_curr$nbasis[mcmc.use])
       n.models <- c(n.models, length(unique(mod_curr$model.lookup[mcmc.use])))
       z <- cbind(z, weights[i] * mod_curr$y)
-      yhat <- yhat + weights[i]*mod_curr$yhat[mcmc.use,]
-      yhat.mean <- yhat.mean + weights[i]*mod_curr$yhat.mean
+      if(has_yhat){
+        yhat <- yhat + weights[i]*mod_curr$yhat[mcmc.use,]
+        yhat.mean <- yhat.mean + weights[i]*mod_curr$yhat.mean
+      }else{
+        yhat <- yhat.mean <- NULL
+      }
+
       lam <- cbind(lam, mod_curr$lam)
       s2 <- s2 + weights[i]^2*mod_curr$s2
       beta.prec <- cbind(beta.prec, weights[i]^(-2) * mod_curr$beta.prec[mcmc.use])
